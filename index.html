@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civil Engineering Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <section class="input-section">
+        <div class="container">
+            <center>
+                <h2>Please enter the length and breadth of the plot</h2>
+            </center>
+            <form id="calcForm">
+                <label for="length">Length (m):</label>
+                <input type="number" id="length" name="length" required>
+
+                <label for="breadth">Breadth (m):</label>
+                <input type="number" id="breadth" name="breadth" required>
+
+                <button type="button" id="calculate" src="/landing.html">Calculate</button>
+            </form>
+        </div>
+    </section>
+    <section class="results-section hidden">
+        <div class="results-container">
+            <h2>Results</h2>
+            <div class="results-grid">
+                <div class="results-left">
+                    <p class="result-line">Area of Plot = <b id="totalArea"></b> m²</p>
+                    <h3>Area Distribution</h3>
+                    <p class="result-line">Living Room Area = <b id="livingRoom"></b> m²</p>
+                    <p class="result-line">Bedroom Area = <b id="bedroom"></b> m²</p>
+                    <p class="result-line">Kitchen Area = <b id="kitchen"></b> m²</p>
+                    <p class="result-line">Dining Room Area = <b id="diningRoom"></b> m²</p>
+                    <p class="result-line">Corridor Area = <b id="corridor"></b> m²</p>
+                    <p class="result-line">Veranda Area = <b id="veranda"></b> m²</p>
+                    <p class="result-line">Storage Room Area = <b id="storageRoom"></b> m²</p>
+                    <p class="result-line">Parking Area = <b id="parking"></b> m²</p>
+
+                    <h3>BRICKWORK</h3>
+                    <p class="result-line">Number of Bricks = <b id="bricks"></b></p>
+                    <p class="result-line">Total cost of bricks = <b id="brickPrice"></b> Rs.</p>
+                    <p class="result-line">Total cost of Brickwork = <b id="brickWork"></b> Rs.</p>
+
+                    <h3>CONCRETE</h3>
+                    <p class="result-line">Volume of Concrete = <b id="concreteVolume"></b> m³</p>
+                    <p class="result-line">Volume of fine aggregate = <b id="fineVolume"></b> m³</p>
+                    <p class="result-line">Volume of coarse aggregate = <b id="coarseVolume"></b> m³</p>
+                    <p class="result-line">Number of cement bags = <b id="cement"></b></p>
+                    <p class="result-line">Cost of fine aggregate = <b id="fineCost"></b> Rs.</p>
+                    <p class="result-line">Cost of coarse aggregate = <b id="coarseCost"></b> Rs.</p>
+                    <p class="result-line">Cost of cement bags = <b id="cementCost"></b> Rs.</p>
+                    <p class="result-line">Cost of concrete = <b id="concreteCost"></b> Rs.</p>
+                </div>
+                
+                <div class="results-right">
+                    <h3>REINFORCEMENT</h3>
+                    <p class="result-line">Weight of reinforcement = <b id="reinforcementWeight"></b> kg</p>
+                    <p class="result-line">Cost of reinforcement = <b id="reinforcementCost"></b> Rs.</p>
+
+                    <h3>DOORS</h3>
+                    <p class="result-line">Number of doors provided = <b id="doors"></b></p>
+                    <p class="result-line">Cost of doors = <b id="doorPrice"></b> Rs.</p>
+
+                    <h3>WINDOWS</h3>
+                    <p class="result-line">Number of windows provided = <b id="windows"></b></p>
+                    <p class="result-line">Cost of windows = <b id="windowPrice"></b> Rs.</p>
+
+                    <h3>LABOUR</h3>
+                    <p class="result-line">Labour Cost = <b id="labourPrice"></b> Rs.</p>
+
+                    <h3>SHUTTERING</h3>
+                    <p class="result-line">Shuttering Cost = <b id="shutteringPrice"></b> Rs.</p>
+
+                    <h3>TOTAL</h3>
+                    <p class="result-line">Total Cost = <b id="totalCost"></b> Rs.</p>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Cost Distribution</h3>
+                <canvas id="costChart"></canvas>
+            </div>
+            <center><h5 style="color: brown;">"(M20 Grade of concrete is used)"</h5></center>
+        </div>
+    </section>
+    <script src="script.js"></script>
+</body>
+
+</html>

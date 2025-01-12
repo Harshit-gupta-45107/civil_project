@@ -1,0 +1,484 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+section {
+    width: 100%;
+    position: relative;
+}
+.input-section {
+    min-height: 100vh;
+    background: url('/pal_image.jpg') no-repeat center;
+    background-size: contain;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.results-section {
+    min-height: 100vh;
+    background: #f5f5f5;
+    padding: 40px 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.5s ease-out;
+}
+
+.results-section.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.results-container {
+    width: 95%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 25px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);
+    text-align: left;
+}
+
+.results-section.visible .results-container {
+    transform: translateY(0);
+}
+
+.container {
+    position: relative;
+    bottom: -150px;
+    width: 90%;
+    max-width: 395px;
+    margin: 0 auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);
+    opacity: 0.85;
+    
+}
+
+section:last-child .container {
+    max-width: 800px;
+    background: #ffffff;
+}
+
+/* Remove absolute positioning and transform */
+.container {
+    transform: none;
+    top: auto;
+    left: auto;
+}
+
+#results {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.6s ease-out forwards;
+    animation-delay: 0.3s;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;  /* Adjusted gap */
+    margin-bottom: 20px;  /* Adjusted margin */
+}
+
+label {
+    font-weight: 600;
+    color: #2c3e50;
+    transition: color 0.3s;
+}
+
+input {
+    padding: 10px;  /* Adjusted padding */
+    font-size: 14px;  /* Adjusted font size */
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+input:hover {
+    border-color: #007BFF;
+}
+
+input:focus {
+    border-color: #007BFF;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.25);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+button {
+    padding: 10px 20px;  /* Adjusted padding */
+    margin-top: 8px;  /* Adjusted margin */
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+.hidden {
+    display: none;
+}
+
+#results p,
+#results li {
+    font-size: 16px;
+    color: #333;
+}
+
+#results h2 {
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+#results h3 {
+    margin: 25px 0 15px;
+    color: #2c3e50;
+}
+
+#results p {
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+#results table {
+    margin: 20px 0;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+#results th {
+    background-color: #f1f4f9;
+    padding: 12px 15px;
+}
+
+#results td {
+    padding: 12px 15px;
+}
+
+h2, h3 {
+    color: #2c3e50; /* Changed to a dark and subtle color */
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul li {
+    background: #fff;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+ul li span {
+    font-weight: bold;
+}
+
+p span {
+    font-weight: bold;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* When results are shown, adjust container position */
+.container.showing-results {
+    top: 0;
+    transform: translate(-50%, 0);
+    margin-top: 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.back-button {
+    margin-top: 20px;
+    background-color: #6c757d;
+    width: 100%;
+}
+
+.back-button:hover {
+    background-color: #5a6268;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    section:first-child {
+        padding: 10px;
+        background-size: cover;
+    }
+
+    .container {
+        width: 95%;
+        padding: 15px;
+    }
+
+    #results h2 {
+        font-size: 1.5rem;
+    }
+
+    #results h3 {
+        font-size: 1.2rem;
+    }
+
+    #results p, #results li {
+        font-size: 0.9rem;
+    }
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+    text-align: left;
+}
+
+.results-left, .results-right {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+    text-align: left;
+}
+
+.results-left p, .results-right p {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    position: relative;
+    padding-right: 120px; /* Space for the value */
+}
+
+.results-left ul li, .results-right ul li {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    position: relative;
+    padding-right: 120px; /* Space for the value */
+}
+
+.results-left span, .results-right span {
+    font-weight: 600;
+    color: #2c3e50;
+    min-width: 100px;
+    text-align: right;
+    margin-left: 15px;
+    flex-shrink: 0;
+}
+
+.results-left p, .results-right p,
+.results-left li, .results-right li {
+    position: relative;
+    padding-right: 120px; /* Space for the value */
+}
+
+/* Remove any text-align from container elements */
+.results-container, .results-grid, .results-left, .results-right {
+    text-align: left;
+}
+
+/* Ensure headings are left-aligned */
+.results-container h2,
+.results-container h3 {
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 992px) {
+    .results-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .results-container {
+        padding: 15px;
+    }
+
+    .results-left p, .results-right p,
+    .results-left ul li, .results-right ul li {
+        padding: 10px;
+        font-size: 0.95rem;
+    }
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin: 8px 0;
+    align-items: center;
+}
+
+.result-item span {
+    margin-left: 10px;
+    font-weight: 600;
+}
+
+.results-left h3, .results-right h3 {
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
+
+.results-container ul {
+    margin: 0;
+    padding: 0;
+}
+
+/* Remove existing styles that might interfere */
+.results-left p, .results-right p,
+.results-left ul li, .results-right ul li {
+    padding-right: initial;
+    position: static;
+}
+
+/* ...existing code... */
+
+.result-line {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    margin: 8px 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.result-line b {
+    font-weight: 600;
+    margin: 0 5px;
+}
+
+/* Remove old result styles */
+.results-left span, .results-right span,
+.result-item,
+.results-left p, .results-right p {
+    display: block;
+    text-align: left;
+    justify-content: unset;
+    padding-right: unset;
+    position: static;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.chart-container {
+    margin-top: 40px;
+    padding: 30px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    width: 95%;
+    height: 400px;  /* Increased height */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#costChart {
+    width: 40% !important;
+    height: 550px !important;  /* Increased height */
+    max-width: 900px;  /* Increased max-width */
+    margin: 0 auto;
+}
+
+/* Mobile responsive adjustments for chart */
+@media (max-width: 768px) {
+    .chart-container {
+        height: 400px;
+    }
+    
+    #costChart {
+        height: 350px !important;
+    }
+}
+
+/* ...rest of existing styles... */
