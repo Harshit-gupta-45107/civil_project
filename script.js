@@ -1,20 +1,35 @@
+let storeyData = {};
+
 function handleCalculation() {
     const length = parseFloat(document.getElementById('length').value);
     const breadth = parseFloat(document.getElementById('breadth').value);
     const totalArea = length * breadth;
-    
+
     if (isNaN(length) || isNaN(breadth) || totalArea < 93 || totalArea > 185) {
         alert('Please enter valid length and breadth!');
         return;
     }
 
-    // Show results section with animations
+    const storeyType = document.getElementById('storeys').value;
+    const numStoreys = storeyType === 'G' ? 1 : storeyType === 'G+1' ? 2 : 3;
+
+    storeyData = {};
+    let totalCost = 0;
+
+    for (let i = 0; i < numStoreys; i++) {
+        const storeyResults = calculateStoreyResults(i);
+        if (storeyResults === null) {
+            return; // Stop if validation fails
+        }
+        storeyData[i] = storeyResults;
+        totalCost += storeyResults.totalCost;
+    }
+
+    displayResults();
+
     const resultsSection = document.querySelector('.results-section');
     resultsSection.classList.remove('hidden');
-    
-    updateResults(length, breadth, totalArea);
-    
-    // Smooth scroll to results
+
     setTimeout(() => {
         resultsSection.classList.add('visible');
         resultsSection.scrollIntoView({
@@ -24,97 +39,248 @@ function handleCalculation() {
     }, 50);
 }
 
-function updateResults(length, breadth, totalArea) {
-    // All calculations moved here
-    const perimeter = 2 * (length + breadth);
-    const concretePrice = 3500;
-    const brickArea = 0.2 * 0.1;
-    const bricks = ((2 * perimeter * 3.35) - (0.3 * 0.3 * 12)) / brickArea;
-    const brickPrice = bricks * 7;
+function calculateStoreyResults(index) {
+    const length = parseFloat(document.getElementById('length').value);
+    const breadth = parseFloat(document.getElementById('breadth').value);
+    let floorArea = Number((length * breadth).toFixed(3));
+    let perimeter = Number((length + breadth).toFixed(3));
+    
+    // Get custom dimensions if specified
+    const useCustomDimensions = document.querySelector(`[name="custom-${index}"]:checked`)?.value === 'yes';
+    let totalRoomArea = 0;
+    let kitchenArea = 0;
+    let totalWashroomArea = 0;
+    let roomCount = 0;
+    let washroomCount = 0;
+    let roomAreas = [];
+    let washroomAreas = [];
+    let isOpenKitchen = false;
 
-    // Calculate areas
-    const kitchenPercentage = 0.09 * totalArea;
-    const bedroomPercentage = 0.275 * totalArea;
-    const livingRoomPercentage = 0.175 * totalArea;
-    const diningRoomPercentage = 0.06 * totalArea;
-    const corridorPercentage = 0.06 * totalArea;
-    const verandaPercentage = 0.05 * totalArea;
-    const storageRoomPercentage = 0.03 * totalArea;
-    const parkingPercentage = 0.05 * totalArea;
+    if (useCustomDimensions) {
+        // Calculate total room area
+        const roomCountInput = document.querySelector(`#custom-inputs-${index} .room-count`);
+        roomCount = parseInt(roomCountInput?.value) || 0;
+        const roomInputs = document.querySelectorAll(`#custom-inputs-${index} .room-dimensions .dimension-group`);
+        roomInputs.forEach(room => {
+            const rLength = parseFloat(room.querySelector('input[placeholder="Length (m)"]').value);
+            const rBreadth = parseFloat(room.querySelector('input[placeholder="Breadth (m)"]').value);
+            perimeter = rBreadth + rLength;
+            if (!isNaN(rLength) && !isNaN(rBreadth)) {
+                const area = rLength * rBreadth;
+                totalRoomArea += area;
+                roomAreas.push(area);
+            }
+        });
 
+        // Get kitchen area and type
+        const kLength = parseFloat(document.querySelector(`#custom-inputs-${index} .kitchen-inputs input[placeholder="Length (m)"]`).value);
+        const kBreadth = parseFloat(document.querySelector(`#custom-inputs-${index} .kitchen-inputs input[placeholder="Breadth (m)"]`).value);
+        isOpenKitchen = document.querySelector(`#custom-inputs-${index} .kitchen-type-open`).checked;
+        kitchenArea = !isNaN(kLength) && !isNaN(kBreadth) ? kLength * kBreadth : 0;
+        perimeter = kBreadth + kLength;
 
-    // Update all DOM elements
-    document.getElementById('totalArea').innerText = Math.ceil(totalArea);
-    document.getElementById('livingRoom').innerText = Math.ceil(livingRoomPercentage);
-    document.getElementById('bedroom').innerText = Math.ceil(bedroomPercentage);
-    document.getElementById('kitchen').innerText = Math.ceil(kitchenPercentage);
-    document.getElementById('diningRoom').innerText = Math.ceil(diningRoomPercentage);
-    document.getElementById('corridor').innerText = Math.ceil(corridorPercentage);
-    document.getElementById('veranda').innerText = Math.ceil(verandaPercentage);
-    document.getElementById('storageRoom').innerText = Math.ceil(storageRoomPercentage);
-    document.getElementById('parking').innerText = Math.ceil(parkingPercentage);
+        // Get washroom area
+        const washroomCountInput = document.querySelector(`#custom-inputs-${index} .washroom-count`);
+        washroomCount = parseInt(washroomCountInput?.value) || 0;
+        const washroomInputs = document.querySelectorAll(`#custom-inputs-${index} .washroom-dimensions .dimension-group`);
+        washroomInputs.forEach(washroom => {
+            const wLength = parseFloat(washroom.querySelector('input[placeholder="Length (m)"]').value);
+            const wBreadth = parseFloat(washroom.querySelector('input[placeholder="Breadth (m)"]').value);
+            perimeter = wLength + wBreadth;
+            if (!isNaN(wLength) && !isNaN(wBreadth)) {
+                const area = wLength * wBreadth;
+                totalWashroomArea += area;
+                washroomAreas.push(area);
+            }
+        });
 
-    // Rest of calculations
-    const slabVolume = totalArea * 0.15;
-    const concreteVolume = slabVolume + (0.3 * 0.3 * 4.57 * 12);
-    const fineVolume = 1.42 * concreteVolume;
-    const coarseVolume = 0.84 * concreteVolume;
-    const cementBags = Math.ceil((concreteVolume + (2 * perimeter * 3.35 * 0.1 * 0.3)) * 8);
+        // Validate total area
+        const totalUsedArea = totalRoomArea + kitchenArea + totalWashroomArea;
+        if (totalUsedArea > floorArea) {
+            alert(`Total area of rooms (${totalUsedArea.toFixed(2)} m²) exceeds floor area (${floorArea.toFixed(2)} m²). Please adjust dimensions.`);
+            return null;
+        }
 
-    const totalCost = 2150 * totalArea + 260 * totalArea + 5 * 5500 + 6 * 4000 + brickPrice + (3454 * 2 * perimeter * 3.35 * 0.1 * 0.3) + 
-    (67 * 0.015 * concreteVolume * 7850) + (fineVolume * 1100 + coarseVolume * 1800 + cementBags * 350);
+        // Update floor area based on custom dimensions
+        perimeter = perimeter * 2;
+    } else {
+        // Default values when custom dimensions are not specified
+        roomCount = 2; // Default 2 bedrooms
+        const defaultRoomArea = Number((floorArea * 0.15).toFixed(3)); // 15% of total area for each bedroom
+        roomAreas = [defaultRoomArea, defaultRoomArea];
+        totalRoomArea = defaultRoomArea * 2;
 
-    document.getElementById('totalCost').innerText = Math.ceil(totalCost);
+        // Default kitchen
+        kitchenArea = Number((floorArea * 0.09).toFixed(3)); // 9% of total area
 
+        // Default washroom
+        washroomCount = 2;
+        const defaultWashroomArea = Number((floorArea * 0.04).toFixed(3)); // 4% of total area for each washroom
+        washroomAreas = [defaultWashroomArea, defaultWashroomArea];
+        totalWashroomArea = defaultWashroomArea * 2;
+    }
 
-    // Update concrete related values
-    document.getElementById('bricks').innerText = Math.ceil(bricks);
-    document.getElementById('brickPrice').innerText = Math.ceil(brickPrice);
-    document.getElementById('brickWork').innerText = Math.ceil(brickPrice + (3454 * 2 * perimeter * 3.35 * 0.1 * 0.3));
-    document.getElementById('concreteVolume').innerText = Math.ceil(concreteVolume);
-    document.getElementById('fineVolume').innerText = Math.ceil(fineVolume);
-    document.getElementById('coarseVolume').innerText = Math.ceil(coarseVolume);
-    document.getElementById('cement').innerText = cementBags;
-    document.getElementById('fineCost').innerText = Math.ceil(fineVolume * 1100);
-    document.getElementById('coarseCost').innerText = Math.ceil(coarseVolume * 1800);
-    document.getElementById('cementCost').innerText = Math.ceil(cementBags * 350);
-    document.getElementById('concreteCost').innerText = Math.ceil(fineVolume * 1100 + coarseVolume * 1800 + cementBags * 350);
+    // Floor-specific adjustments
+    const columnNumber = Number(((length + breadth) / 4.0 + 2) * 3 - 3).toFixed(3);
+    const slabVolume = Number((floorArea * 0.15).toFixed(3));
+    const columnVolume = Number((0.3 * 0.3 * 4.3 * columnNumber).toFixed(3));
+    const concreteVolume = Number((slabVolume + columnVolume).toFixed(3));
+    const mortarVolume = Number((perimeter * 3 * 1.3).toFixed(3));
+    const fineVolume = Number((0.75 * mortarVolume + (1.5/5.5) * concreteVolume).toFixed(3));
+    const coarseVolume = Number((3.0/5.5 * concreteVolume).toFixed(3));
+    const cementVolume = Number((1.0/5.5 * concreteVolume + 0.25 * mortarVolume).toFixed(3));
+    const cementBags = Math.ceil(concreteVolume * 0.18 / 1.25);
 
-    // Other elements
-    document.getElementById('reinforcementWeight').innerText = Math.ceil(0.015 * concreteVolume * 7850);
-    document.getElementById('reinforcementCost').innerText = Math.ceil(67 * 0.015 * concreteVolume * 7850);
-    document.getElementById('doors').innerText = '5';
-    document.getElementById('doorPrice').innerText = Math.ceil(5 * 5500);
-    document.getElementById('windows').innerText = '6';
-    document.getElementById('windowPrice').innerText = Math.ceil(6 * 4000);
-    document.getElementById('labourPrice').innerText = Math.ceil(2150 * totalArea);
-    document.getElementById('shutteringPrice').innerText = Math.ceil(260 * totalArea);
+    // Adjust brick calculations for each floor
+    const brickArea = Number((0.19 * 0.09 * 0.09).toFixed(3));
+    let bricks = Number((perimeter * 3 * 0.09) / brickArea).toFixed(3);
+    bricks = Number((bricks * 0.8).toFixed(3));
+    const brickPrice = Number((bricks * 8).toFixed(3));
+    const mortarPrice = Number((3454 * mortarVolume).toFixed(3));
+    const brickWorkTotal = Number(brickPrice.toFixed(3));
+    const electricalWork = Number((200 * floorArea).toFixed(3));
+    const sanitaryWork = Number((600 * floorArea).toFixed(3));
 
-    const brickWorkTotal = Math.ceil(brickPrice + (3454 * 2 * perimeter * 3.35 * 0.1 * 0.3));
-    const concreteTotal = Math.ceil(fineVolume * 1100 + coarseVolume * 1800 + cementBags * 350);
-    const reinforcementTotal = Math.ceil(67 * 0.015 * concreteVolume * 7850);
-    const doorsTotal = Math.ceil(5 * 5500);
-    const windowsTotal = Math.ceil(6 * 4000);
-    const labourTotal = Math.ceil(2150 * totalArea);
-    const shutteringTotal = Math.ceil(260 * totalArea);
+    // Calculate costs based on actual dimensions and floor level
+    const excavationCost = Number((1700 * (0.9 * 1.2 * perimeter)).toFixed(3));
 
-    // Create or update pie chart
-    createCostChart({
+    // Adjust door count based on kitchen type
+    const doorCount = roomCount + washroomCount + (isOpenKitchen ? 0 : 1);
+
+    const costs = {
         brickWork: brickWorkTotal,
-        concrete: concreteTotal,
-        reinforcement: reinforcementTotal,
-        doors: doorsTotal,
-        windows: windowsTotal,
-        labour: labourTotal,
-        shuttering: shutteringTotal
+        reinforcement: Math.ceil(68 * 0.015 * concreteVolume * 7850),
+        labour: Math.ceil(1800 * floorArea),
+        shuttering: Math.ceil(260 * floorArea),
+        excavation: excavationCost,
+        fine: Math.ceil(fineVolume * 1100),
+        coarse: Math.ceil(coarseVolume * 1800),
+        cement: Math.ceil(cementBags * 350),
+        concrete: Math.ceil(fineVolume * 1100 + coarseVolume * 1800 + cementBags * 350)
+    };
+
+    return {
+        floorLevel: ['Ground Floor', 'First Floor', 'Second Floor'][index],
+        totalArea: floorArea,
+        dimensions: {
+            rooms: roomAreas,
+            kitchen: kitchenArea,
+            washrooms: washroomAreas
+        },
+        materials: {
+            bricks: Math.ceil(bricks),
+            concrete: Number(concreteVolume.toFixed(3)),
+            cement: cementBags,
+            fineAggregate: Number(fineVolume.toFixed(3)),
+            coarseAggregate: Number(coarseVolume.toFixed(3))
+        },
+        costs: costs,
+        totalCost: Object.values(costs).reduce((a, b) => a + b, 0)
+    };
+}
+
+function displayResults() {
+    const container = document.getElementById('storeyResults');
+    container.innerHTML = '';
+
+    Object.keys(storeyData).forEach(index => {
+        container.appendChild(createStoreyResultsSection(index));
     });
+
+    updateTotalCostChart();
+}
+
+function createStoreyResultsSection(index) {
+    const storey = storeyData[index];
+    const div = document.createElement('div');
+    div.className = 'storey-results';
+    div.innerHTML = `
+        <h2>${storey.floorLevel} Results</h2>
+        <div class="results-grid">
+            <div class="results-left">
+                <p class="result-line">Area of Plot = <b>${Math.ceil(storey.totalArea)}</b> m²</p>
+                <h3>Area Distribution</h3>
+                <p class="result-line">Living Room Area = <b>${Math.ceil(storey.totalArea * 0.175)}</b> m²</p>
+                <p class="result-line">Bedroom Area = <b>${Math.ceil(storey.totalArea * 0.275)}</b> m²</p>
+                <p class="result-line">Kitchen Area = <b>${Math.ceil(storey.dimensions.kitchen)}</b> m²</p>
+                <p class="result-line">Dining Room Area = <b>${Math.ceil(storey.totalArea * 0.06)}</b> m²</p>
+                <p class="result-line">Corridor Area = <b>${Math.ceil(storey.totalArea * 0.06)}</b> m²</p>
+                <p class="result-line">Veranda Area = <b>${Math.ceil(storey.totalArea * 0.05)}</b> m²</p>
+                <p class="result-line">Storage Room Area = <b>${Math.ceil(storey.totalArea * 0.03)}</b> m²</p>
+                <p class="result-line">Parking Area = <b>${Math.ceil(storey.totalArea * 0.05)}</b> m²</p>
+
+                <h3>BRICKWORK</h3>
+                <p class="result-line">Number of Bricks = <b>${storey.materials.bricks}</b></p>
+                <p class="result-line">Total cost of bricks = <b>${storey.costs.brickWork}</b> Rs.</p>
+
+                <h3>CONCRETE</h3>
+                <p class="result-line">Volume of Concrete = <b>${storey.materials.concrete}</b> m³</p>
+                <p class="result-line">Volume of fine aggregate = <b>${storey.materials.fineAggregate}</b> m³</p>
+                <p class="result-line">Volume of coarse aggregate = <b>${storey.materials.coarseAggregate}</b> m³</p>
+                <p class="result-line">Number of cement bags = <b>${storey.materials.cement}</b></p>
+                <p class="result-line">Cost of fine aggregate = <b>${storey.costs.fine}</b> Rs.</p>
+                <p class="result-line">Cost of coarse aggregate = <b>${storey.costs.coarse}</b> Rs.</p>
+                <p class="result-line">Cost of cement bags = <b>${storey.costs.cement}</b> Rs.</p>
+                <p class="result-line">Cost of concrete = <b>${storey.costs.concrete}</b> Rs.</p>
+            </div>
+            
+            <div class="results-right">
+                <h3>REINFORCEMENT</h3>
+                <p class="result-line">Weight of reinforcement = <b>${Math.ceil(0.015 * storey.materials.concrete * 7850)}</b> kg</p>
+                <p class="result-line">Cost of reinforcement = <b>${storey.costs.reinforcement}</b> Rs.</p>
+
+                <h3>DOORS</h3>
+                <p class="result-line">Number of doors provided = <b>${storey.dimensions.rooms.length + storey.dimensions.washrooms.length + 1}</b></p>
+                
+                <h3>WINDOWS</h3>
+                <p class="result-line">Number of windows provided = <b>${(storey.dimensions.rooms.length + storey.dimensions.washrooms.length + 1)}</b></p>
+
+                <h3>LABOUR</h3>
+                <p class="result-line">Labour Cost = <b>${storey.costs.labour}</b> Rs.</p>
+
+                <h3>SHUTTERING</h3>
+                <p class="result-line">Shuttering Cost = <b>${storey.costs.shuttering}</b> Rs.</p>
+
+                <h3>EXCAVATION</h3>
+                <p class="result-line">Excavation Cost = <b>${storey.costs.excavation}</b> Rs.</p>
+
+                <h3>TOTAL</h3>
+                <p class="result-line">Total Floor Cost = <b>${storey.totalCost}</b> Rs.</p>
+            </div>
+        </div>
+    `;
+    return div;
+}
+
+function updateTotalCostChart() {
+    const totalCosts = {
+        brickWork: 0,
+        reinforcement: 0,
+        labour: 0,
+        shuttering: 0,
+        excavation: 0,
+        fine: 0,
+        coarse: 0,
+        // cement: 0,
+        concrete: 0
+    };
+
+    // Sum up costs from all storeys
+    Object.values(storeyData).forEach(storey => {
+        Object.entries(storey.costs).forEach(([key, value]) => {
+            totalCosts[key] += value;
+        });
+    });
+
+    // Create pie chart with total costs
+    createCostChart(totalCosts);
 }
 
 let costChart = null;
 
 function createCostChart(costs) {
     const ctx = document.getElementById('costChart').getContext('2d');
-    
+
     if (costChart) {
         costChart.destroy();
     }
@@ -124,56 +290,62 @@ function createCostChart(costs) {
         data: {
             labels: [
                 'Brickwork',
-                'Concrete',
                 'Reinforcement',
-                'Doors',
-                'Windows',
                 'Labour',
-                'Shuttering'
+                'Shuttering',
+                'Excavation',
+                'Fine Aggregate',
+                'Coarse Aggregate',
+                // 'Cement',
+                'Concrete'
             ],
-            datasets: [{
+            datasets: [{  // Fixed: 'ts' changed to 'datasets'
                 data: [
                     costs.brickWork,
-                    costs.concrete,
                     costs.reinforcement,
-                    costs.doors,
-                    costs.windows,
                     costs.labour,
-                    costs.shuttering
+                    costs.shuttering,
+                    costs.excavation,
+                    costs.fine,
+                    costs.coarse,
+                    // costs.cement,
+                    costs.concrete
                 ],
                 backgroundColor: [
                     '#FF6384',
-                    '#36A2EB',
                     '#FFCE56',
                     '#4BC0C0',
                     '#9966FF',
                     '#FF9F40',
-                    '#7CBA3B'
+                    '#7CBA3B',
+                    '#D3D3D3',
+                    // '#FF5733',
+                    '#36A2EB'
                 ]
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,  // Added this
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: 'right',
                     labels: {
                         font: {
-                            size: 16  // Increased font size
+                            size: 16
                         },
-                        padding: 20  // Added padding
+                        padding: 20
                     }
                 },
                 tooltip: {
                     titleFont: {
-                        size: 16  // Increased title font size
+                        size: 16
                     },
                     bodyFont: {
-                        size: 14  // Increased body font size
+                        size: 14
                     },
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             const value = context.raw;
                             const total = context.dataset.data.reduce((a, b) => a + b);
                             const percentage = Math.round((value / total) * 100);
@@ -185,23 +357,21 @@ function createCostChart(costs) {
             animation: {
                 animateScale: true,
                 animateRotate: true,
-                duration: 1000  // Added duration
+                duration: 1000
             }
         }
     });
 }
 
-// Event Listeners
 document.getElementById('calculate').addEventListener('click', handleCalculation);
 
-document.getElementById('calcForm').addEventListener('keypress', function(event) {
+document.getElementById('calcForm').addEventListener('keypress', function (event) {
     if (event.key === 'Enter') {
         event.preventDefault();
         handleCalculation();
     }
 });
 
-// Add resize handler for responsive behavior
 window.addEventListener('resize', () => {
     const resultsSection = document.querySelector('.results-section');
     if (resultsSection.classList.contains('visible')) {
@@ -209,5 +379,105 @@ window.addEventListener('resize', () => {
             behavior: 'smooth',
             block: 'start'
         });
+    }
+});
+
+document.getElementById('storeys').addEventListener('change', function (e) {
+    createStoreyInputs(e.target.value);
+});
+
+function createStoreyInputs(storeyType) {
+    const container = document.getElementById('storeyInputs');
+    container.innerHTML = '';
+
+    const numStoreys = storeyType === 'G' ? 1 : storeyType === 'G+1' ? 2 : 3;
+    const storeyNames = ['Ground Floor', 'First Floor', 'Second Floor'];
+
+    for (let i = 0; i < numStoreys; i++) {
+        container.appendChild(createStoreyForm(storeyNames[i], i));
+    }
+}
+
+function createStoreyForm(name, index) {
+    const div = document.createElement('div');
+    div.className = 'storey-details';
+    div.innerHTML = `
+        <h3>${name}</h3>
+        <div class="custom-dimensions-toggle">
+            <label>Specify Custom Dimensions:</label>
+            <input type="radio" name="custom-${index}" value="yes"> Yes
+            <input type="radio" name="custom-${index}" value="no" checked> No
+        </div>
+        <div id="custom-inputs-${index}" class="hidden">
+            <div class="room-inputs">
+                <label>Number of Rooms:</label>
+                <input type="number" class="room-count" min="1" max="10">
+                <div class="room-dimensions"></div>
+            </div>
+            <div class="kitchen-inputs">
+                <label>Kitchen Dimensions:</label>
+                <div class="dimension-group">
+                    <input type="number" placeholder="Length (m)">
+                    <input type="number" placeholder="Breadth (m)">
+                </div>
+                <div class="kitchen-type">
+                    <label>Kitchen Type:</label>
+                    <input type="radio" name="kitchen-type-${index}" class="kitchen-type-closed" value="closed" checked> Closed
+                    <input type="radio" name="kitchen-type-${index}" class="kitchen-type-open" value="open"> Open
+                </div>
+            </div>
+            <div class="washroom-inputs">
+                <label>Number of Washrooms:</label>
+                <input type="number" class="washroom-count" min="1" max="5">
+                <div class="washroom-dimensions"></div>
+            </div>
+        </div>
+    `;
+    return div;
+}
+
+// Update the room count event listener
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('room-count')) {
+        const parentDiv = e.target.closest('.room-inputs');
+        const dimensionsDiv = parentDiv.querySelector('.room-dimensions');
+        const count = parseInt(e.target.value) || 0;
+        dimensionsDiv.innerHTML = '';
+        
+        for(let i = 0; i < count; i++) {
+            const roomGroup = document.createElement('div');
+            roomGroup.className = 'dimension-group';
+            roomGroup.innerHTML = `
+                <input type="number" placeholder="Length (m)" step="0.01" min="0">
+                <input type="number" placeholder="Breadth (m)" step="0.01" min="0">
+            `;
+            dimensionsDiv.appendChild(roomGroup);
+        }
+    }
+    
+    if (e.target.classList.contains('washroom-count')) {
+        const parentDiv = e.target.closest('.washroom-inputs');
+        const dimensionsDiv = parentDiv.querySelector('.washroom-dimensions');
+        const count = parseInt(e.target.value) || 0;
+        dimensionsDiv.innerHTML = '';
+        
+        for(let i = 0; i < count; i++) {
+            const washroomGroup = document.createElement('div');
+            washroomGroup.className = 'dimension-group';
+            washroomGroup.innerHTML = `
+                <input type="number" placeholder="Length (m)" step="0.01" min="0">
+                <input type="number" placeholder="Breadth (m)" step="0.01" min="0">
+            `;
+            dimensionsDiv.appendChild(washroomGroup);
+        }
+    }
+});
+
+// Add event listener for custom dimensions toggle
+document.addEventListener('change', function(e) {
+    if (e.target.name && e.target.name.startsWith('custom-')) {
+        const index = e.target.name.split('-')[1];
+        const customInputs = document.getElementById(`custom-inputs-${index}`);
+        customInputs.classList.toggle('hidden', e.target.value === 'no');
     }
 });
