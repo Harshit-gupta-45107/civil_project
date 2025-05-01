@@ -43,7 +43,7 @@ function calculateStoreyResults(index) {
     const length = parseFloat(document.getElementById('length').value);
     const breadth = parseFloat(document.getElementById('breadth').value);
     let floorArea = Number((length * breadth).toFixed(3));
-    let perimeter = Number((length + breadth).toFixed(3));
+    let perimeter = length + breadth;
     
     // Get custom dimensions if specified
     const useCustomDimensions = document.querySelector(`[name="custom-${index}"]:checked`)?.value === 'yes';
@@ -64,7 +64,7 @@ function calculateStoreyResults(index) {
         roomInputs.forEach(room => {
             const rLength = parseFloat(room.querySelector('input[placeholder="Length (m)"]').value);
             const rBreadth = parseFloat(room.querySelector('input[placeholder="Breadth (m)"]').value);
-            perimeter = rBreadth + rLength;
+            perimeter = perimeter + rBreadth + rLength;
             if (!isNaN(rLength) && !isNaN(rBreadth)) {
                 const area = rLength * rBreadth;
                 totalRoomArea += area;
@@ -77,7 +77,7 @@ function calculateStoreyResults(index) {
         const kBreadth = parseFloat(document.querySelector(`#custom-inputs-${index} .kitchen-inputs input[placeholder="Breadth (m)"]`).value);
         isOpenKitchen = document.querySelector(`#custom-inputs-${index} .kitchen-type-open`).checked;
         kitchenArea = !isNaN(kLength) && !isNaN(kBreadth) ? kLength * kBreadth : 0;
-        perimeter = kBreadth + kLength;
+        perimeter = perimeter + kBreadth + kLength;
 
         // Get washroom area
         const washroomCountInput = document.querySelector(`#custom-inputs-${index} .washroom-count`);
@@ -86,7 +86,7 @@ function calculateStoreyResults(index) {
         washroomInputs.forEach(washroom => {
             const wLength = parseFloat(washroom.querySelector('input[placeholder="Length (m)"]').value);
             const wBreadth = parseFloat(washroom.querySelector('input[placeholder="Breadth (m)"]').value);
-            perimeter = wLength + wBreadth;
+            perimeter = perimeter + wLength + wBreadth;
             if (!isNaN(wLength) && !isNaN(wBreadth)) {
                 const area = wLength * wBreadth;
                 totalWashroomArea += area;
@@ -125,16 +125,16 @@ function calculateStoreyResults(index) {
     const slabVolume = Number((floorArea * 0.15).toFixed(3));
     const columnVolume = Number((0.3 * 0.3 * 4.3 * columnNumber).toFixed(3));
     const concreteVolume = Number((slabVolume + columnVolume).toFixed(3));
-    const mortarVolume = Number((perimeter * 3 * 1.3).toFixed(3));
+    const mortarVolume = Number((perimeter * 3 * 0.13).toFixed(3));
     const fineVolume = Number((0.75 * mortarVolume + (1.5/5.5) * concreteVolume).toFixed(3));
     const coarseVolume = Number((3.0/5.5 * concreteVolume).toFixed(3));
     const cementVolume = Number((1.0/5.5 * concreteVolume + 0.25 * mortarVolume).toFixed(3));
-    const cementBags = Math.ceil(concreteVolume * 0.18 / 1.25);
+    const cementBags = Math.ceil(cementVolume / 0.033);
 
     // Adjust brick calculations for each floor
-    const brickArea = Number((0.19 * 0.09 * 0.09).toFixed(3));
-    let bricks = Number((perimeter * 3 * 0.09) / brickArea).toFixed(3);
-    bricks = Number((bricks * 0.8).toFixed(3));
+    const brickArea = Number((0.19 * 0.009 * 0.009).toFixed(3));
+    let bricks = Number((perimeter * 3 * 0.09) / 0.00154).toFixed(3);
+    bricks = Number((bricks * 0.6).toFixed(3));
     const brickPrice = Number((bricks * 8).toFixed(3));
     const mortarPrice = Number((3454 * mortarVolume).toFixed(3));
     const brickWorkTotal = Number(brickPrice.toFixed(3));
@@ -199,6 +199,7 @@ function createStoreyResultsSection(index) {
         <div class="results-grid">
             <div class="results-left">
                 <p class="result-line">Area of Plot = <b>${Math.ceil(storey.totalArea)}</b> m²</p>
+
                 <h3>Area Distribution</h3>
                 <p class="result-line">Living Room Area = <b>${Math.ceil(storey.totalArea * 0.175)}</b> m²</p>
                 <p class="result-line">Bedroom Area = <b>${Math.ceil(storey.totalArea * 0.275)}</b> m²</p>
