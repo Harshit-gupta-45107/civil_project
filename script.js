@@ -5,7 +5,7 @@ function handleCalculation() {
     const breadth = parseFloat(document.getElementById('breadth').value);
     const totalArea = length * breadth;
 
-    if (isNaN(length) || isNaN(breadth) || totalArea < 93 || totalArea > 185) {
+    if (isNaN(length) || isNaN(breadth) || totalArea < 90 || totalArea > 200) {
         alert('Please enter valid length and breadth!');
         return;
     }
@@ -57,47 +57,74 @@ function calculateStoreyResults(index) {
     let isOpenKitchen = false;
 
     if (useCustomDimensions) {
-        // Calculate total room area
+        // Validate room count
         const roomCountInput = document.querySelector(`#custom-inputs-${index} .room-count`);
         roomCount = parseInt(roomCountInput?.value) || 0;
+        if (roomCount < 1 || roomCount > 3) {
+            alert('Number of rooms must be between 1 and 3');
+            return null;
+        }
+
+        // Validate washroom count
+        const washroomCountInput = document.querySelector(`#custom-inputs-${index} .washroom-count`);
+        washroomCount = parseInt(washroomCountInput?.value) || 0;
+        if (washroomCount < 1 || washroomCount > 3) {
+            alert('Number of washrooms must be between 1 and 3');
+            return null;
+        }
+
+        // Calculate total room area and validate dimensions
         const roomInputs = document.querySelectorAll(`#custom-inputs-${index} .room-dimensions .dimension-group`);
         roomInputs.forEach(room => {
             const rLength = parseFloat(room.querySelector('input[placeholder="Length (m)"]').value);
             const rBreadth = parseFloat(room.querySelector('input[placeholder="Breadth (m)"]').value);
-            perimeter = perimeter + rBreadth + rLength;
-            if (!isNaN(rLength) && !isNaN(rBreadth)) {
-                const area = rLength * rBreadth;
-                totalRoomArea += area;
-                roomAreas.push(area);
+            
+            if (rLength <= 0 || rBreadth <= 0) {
+                alert('Room dimensions must be greater than 0');
+                return null;
             }
+            
+            perimeter = perimeter + rBreadth + rLength;
+            const area = rLength * rBreadth;
+            totalRoomArea += area;
+            roomAreas.push(area);
         });
 
-        // Get kitchen area and type
+        // Get and validate kitchen dimensions
         const kLength = parseFloat(document.querySelector(`#custom-inputs-${index} .kitchen-inputs input[placeholder="Length (m)"]`).value);
         const kBreadth = parseFloat(document.querySelector(`#custom-inputs-${index} .kitchen-inputs input[placeholder="Breadth (m)"]`).value);
+        
+        if (kLength <= 0 || kBreadth <= 0) {
+            alert('Kitchen dimensions must be greater than 0');
+            return null;
+        }
+        
         isOpenKitchen = document.querySelector(`#custom-inputs-${index} .kitchen-type-open`).checked;
-        kitchenArea = !isNaN(kLength) && !isNaN(kBreadth) ? kLength * kBreadth : 0;
+        kitchenArea = kLength * kBreadth;
         perimeter = perimeter + kBreadth + kLength;
 
-        // Get washroom area
-        const washroomCountInput = document.querySelector(`#custom-inputs-${index} .washroom-count`);
-        washroomCount = parseInt(washroomCountInput?.value) || 0;
+        // Calculate washroom areas and validate dimensions
         const washroomInputs = document.querySelectorAll(`#custom-inputs-${index} .washroom-dimensions .dimension-group`);
         washroomInputs.forEach(washroom => {
             const wLength = parseFloat(washroom.querySelector('input[placeholder="Length (m)"]').value);
             const wBreadth = parseFloat(washroom.querySelector('input[placeholder="Breadth (m)"]').value);
-            perimeter = perimeter + wLength + wBreadth;
-            if (!isNaN(wLength) && !isNaN(wBreadth)) {
-                const area = wLength * wBreadth;
-                totalWashroomArea += area;
-                washroomAreas.push(area);
+            
+            if (wLength <= 0 || wBreadth <= 0) {
+                alert('Washroom dimensions must be greater than 0');
+                return null;
             }
+            
+            perimeter = perimeter + wLength + wBreadth;
+            const area = wLength * wBreadth;
+            totalWashroomArea += area;
+            washroomAreas.push(area);
         });
 
-        // Validate total area
+        // Validate total area (must not exceed 75% of floor area)
         const totalUsedArea = totalRoomArea + kitchenArea + totalWashroomArea;
-        if (totalUsedArea > floorArea) {
-            alert(`Total area of rooms (${totalUsedArea.toFixed(2)} m²) exceeds floor area (${floorArea.toFixed(2)} m²). Please adjust dimensions.`);
+        const maxAllowedArea = floorArea * 0.75;
+        if (totalUsedArea > maxAllowedArea) {
+            alert(`Total constructed area (${totalUsedArea.toFixed(2)} m²) exceeds 75% of floor area (${maxAllowedArea.toFixed(2)} m²). Please adjust dimensions.`);
             return null;
         }
 
@@ -118,13 +145,21 @@ function calculateStoreyResults(index) {
         const defaultWashroomArea = Number((floorArea * 0.04).toFixed(3)); // 4% of total area for each washroom
         washroomAreas = [defaultWashroomArea, defaultWashroomArea];
         totalWashroomArea = defaultWashroomArea * 2;
+
+        perimeter = perimeter * 5; // Default perimeter calculation
     }
 
     // Floor-specific adjustments
     const columnNumber = Number(((length + breadth) / 4.0 + 2) * 3 - 3).toFixed(3);
     const slabVolume = Number((floorArea * 0.15).toFixed(3));
     const columnVolume = Number((0.3 * 0.3 * 4.3 * columnNumber).toFixed(3));
-    const concreteVolume = Number((slabVolume + columnVolume).toFixed(3));
+    
+    // Add additional concrete volume based on total number of floors
+    const storeyType = document.getElementById('storeys').value;
+    const totalFloors = storeyType === 'G' ? 1 : storeyType === 'G+1' ? 2 : 3;
+    const additionalConcreteVolume = 2 * totalFloors;  // 2 units per floor
+    
+    const concreteVolume = Number((slabVolume + columnVolume + additionalConcreteVolume).toFixed(3));
     const mortarVolume = Number((perimeter * 3 * 0.13).toFixed(3));
     const fineVolume = Number((0.75 * mortarVolume + (1.5/5.5) * concreteVolume).toFixed(3));
     const coarseVolume = Number((3.0/5.5 * concreteVolume).toFixed(3));
@@ -142,7 +177,7 @@ function calculateStoreyResults(index) {
     const sanitaryWork = Number((600 * floorArea).toFixed(3));
 
     // Calculate costs based on actual dimensions and floor level
-    const excavationCost = Number((1700 * (0.9 * 1.2 * perimeter)).toFixed(3));
+    const excavationCost = Number((180 * (0.9 * 1.2 * perimeter)).toFixed(3));
 
     // Adjust door count based on kitchen type
     const doorCount = roomCount + washroomCount + (isOpenKitchen ? 0 : 1);
@@ -151,13 +186,20 @@ function calculateStoreyResults(index) {
         brickWork: brickWorkTotal,
         reinforcement: Math.ceil(68 * 0.015 * concreteVolume * 7850),
         labour: Math.ceil(1800 * floorArea),
-        shuttering: Math.ceil(260 * floorArea),
+        shuttering: Math.ceil(295 * floorArea),
         excavation: excavationCost,
-        fine: Math.ceil(fineVolume * 1100),
-        coarse: Math.ceil(coarseVolume * 1800),
+        fine: Math.ceil(fineVolume * 1800),
+        coarse: Math.ceil(coarseVolume * 2200),
         cement: Math.ceil(cementBags * 350),
-        concrete: Math.ceil(fineVolume * 1100 + coarseVolume * 1800 + cementBags * 350)
+        concrete: Math.ceil(fineVolume * 1100 + coarseVolume * 1800 + cementBags * 350),
+        sanitaryWork: sanitaryWork,
+        electricalWork: electricalWork
     };
+
+    // Add damp proof cost for ground floor only
+    if (index === 0) {
+        costs.dampProofCost = Math.ceil(205 * 0.3 * 0.08 * perimeter);
+    }
 
     return {
         floorLevel: ['Ground Floor', 'First Floor', 'Second Floor'][index],
@@ -175,7 +217,8 @@ function calculateStoreyResults(index) {
             coarseAggregate: Number(coarseVolume.toFixed(3))
         },
         costs: costs,
-        totalCost: Object.values(costs).reduce((a, b) => a + b, 0)
+        totalCost: Object.entries(costs).reduce((total, [key, value]) => 
+            key !== 'concrete' ? total + value : total, 0)
     };
 }
 
@@ -183,9 +226,24 @@ function displayResults() {
     const container = document.getElementById('storeyResults');
     container.innerHTML = '';
 
+    let totalProjectCost = 0;
     Object.keys(storeyData).forEach(index => {
+        totalProjectCost += storeyData[index].totalCost;
         container.appendChild(createStoreyResultsSection(index));
     });
+
+    // Add Total Project Cost section with notes
+    const totalCostDiv = document.createElement('div');
+    totalCostDiv.className = 'total-project-cost';
+    totalCostDiv.innerHTML = `
+        <h2>Total Cost of Project</h2>
+        <p class="result-line">Total Project Cost = <b>${totalProjectCost.toLocaleString()}</b> Rs.</p>
+        <div class="notes" style="margin-top: 20px; font-style: italic; color: #666;">
+            <p>* Excluding all taxes</p>
+            <p>* All calculations as per NBC, DSR</p>
+        </div>
+    `;
+    container.appendChild(totalCostDiv);
 
     updateTotalCostChart();
 }
@@ -194,12 +252,17 @@ function createStoreyResultsSection(index) {
     const storey = storeyData[index];
     const div = document.createElement('div');
     div.className = 'storey-results';
+    
+    // Check if custom dimensions are being used
+    const useCustomDimensions = document.querySelector(`[name="custom-${index}"]:checked`)?.value === 'yes';
+
     div.innerHTML = `
         <h2>${storey.floorLevel} Results</h2>
         <div class="results-grid">
             <div class="results-left">
                 <p class="result-line">Area of Plot = <b>${Math.ceil(storey.totalArea)}</b> m²</p>
 
+                ${(!useCustomDimensions) ? `
                 <h3>Area Distribution</h3>
                 <p class="result-line">Living Room Area = <b>${Math.ceil(storey.totalArea * 0.175)}</b> m²</p>
                 <p class="result-line">Bedroom Area = <b>${Math.ceil(storey.totalArea * 0.275)}</b> m²</p>
@@ -209,6 +272,7 @@ function createStoreyResultsSection(index) {
                 <p class="result-line">Veranda Area = <b>${Math.ceil(storey.totalArea * 0.05)}</b> m²</p>
                 <p class="result-line">Storage Room Area = <b>${Math.ceil(storey.totalArea * 0.03)}</b> m²</p>
                 <p class="result-line">Parking Area = <b>${Math.ceil(storey.totalArea * 0.05)}</b> m²</p>
+                ` : ''}
 
                 <h3>BRICKWORK</h3>
                 <p class="result-line">Number of Bricks = <b>${storey.materials.bricks}</b></p>
@@ -245,6 +309,11 @@ function createStoreyResultsSection(index) {
                 <h3>EXCAVATION</h3>
                 <p class="result-line">Excavation Cost = <b>${storey.costs.excavation}</b> Rs.</p>
 
+                ${index === 0 ? `
+                <h3>DAMP PROOF</h3>
+                <p class="result-line">Damp Proof Cost = <b>${storey.costs.dampProofCost}</b> Rs.</p>
+                ` : ''}
+
                 <h3>TOTAL</h3>
                 <p class="result-line">Total Floor Cost = <b>${storey.totalCost}</b> Rs.</p>
             </div>
@@ -262,8 +331,10 @@ function updateTotalCostChart() {
         excavation: 0,
         fine: 0,
         coarse: 0,
-        // cement: 0,
-        concrete: 0
+        concrete: 0,
+        sanitaryWork: 0,
+        electricalWork: 0,
+        dampProofCost: 0
     };
 
     // Sum up costs from all storeys
@@ -273,7 +344,6 @@ function updateTotalCostChart() {
         });
     });
 
-    // Create pie chart with total costs
     createCostChart(totalCosts);
 }
 
@@ -297,10 +367,12 @@ function createCostChart(costs) {
                 'Excavation',
                 'Fine Aggregate',
                 'Coarse Aggregate',
-                // 'Cement',
                 'Concrete'
+                // 'Sanitary Work',
+                // 'Electrical Work',
+                // 'Damp Proof'
             ],
-            datasets: [{  // Fixed: 'ts' changed to 'datasets'
+            datasets: [{
                 data: [
                     costs.brickWork,
                     costs.reinforcement,
@@ -309,8 +381,10 @@ function createCostChart(costs) {
                     costs.excavation,
                     costs.fine,
                     costs.coarse,
-                    // costs.cement,
-                    costs.concrete
+                    costs.concrete,
+                    // costs.sanitaryWork,
+                    // costs.electricalWork,
+                    // costs.dampProofCost
                 ],
                 backgroundColor: [
                     '#FF6384',
@@ -320,8 +394,10 @@ function createCostChart(costs) {
                     '#FF9F40',
                     '#7CBA3B',
                     '#D3D3D3',
-                    // '#FF5733',
-                    '#36A2EB'
+                    '#36A2EB',
+                    // '#90EE90',
+                    // '#FFB6C1',
+                    // '#DDA0DD'
                 ]
             }]
         },
@@ -402,6 +478,7 @@ function createStoreyInputs(storeyType) {
 function createStoreyForm(name, index) {
     const div = document.createElement('div');
     div.className = 'storey-details';
+    
     div.innerHTML = `
         <h3>${name}</h3>
         <div class="custom-dimensions-toggle">
@@ -411,15 +488,15 @@ function createStoreyForm(name, index) {
         </div>
         <div id="custom-inputs-${index}" class="hidden">
             <div class="room-inputs">
-                <label>Number of Rooms:</label>
-                <input type="number" class="room-count" min="1" max="10">
+                <label>Number of Rooms (1-3):</label>
+                <input type="number" class="room-count" min="1" max="3" required>
                 <div class="room-dimensions"></div>
             </div>
             <div class="kitchen-inputs">
                 <label>Kitchen Dimensions:</label>
                 <div class="dimension-group">
-                    <input type="number" placeholder="Length (m)">
-                    <input type="number" placeholder="Breadth (m)">
+                    <input type="number" placeholder="Length (m)" step="0.01" min="0.1" required>
+                    <input type="number" placeholder="Breadth (m)" step="0.01" min="0.1" required>
                 </div>
                 <div class="kitchen-type">
                     <label>Kitchen Type:</label>
@@ -428,8 +505,8 @@ function createStoreyForm(name, index) {
                 </div>
             </div>
             <div class="washroom-inputs">
-                <label>Number of Washrooms:</label>
-                <input type="number" class="washroom-count" min="1" max="5">
+                <label>Number of Washrooms (1-3):</label>
+                <input type="number" class="washroom-count" min="1" max="3" required>
                 <div class="washroom-dimensions"></div>
             </div>
         </div>
