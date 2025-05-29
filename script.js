@@ -152,15 +152,24 @@ function calculateStoreyResults(index) {
     // Floor-specific adjustments
     const columnNumber = Number(((length + breadth) / 4.0 + 2) * 3 - 3).toFixed(3);
     const slabVolume = Number((floorArea * 0.15).toFixed(3));
-    const columnVolume = Number((0.3 * 0.3 * 4.3 * columnNumber).toFixed(3));
-    
+    let columnVolume;
+    if(index == 0) {
+        columnVolume = Number((0.3 * 0.3 * 4.3 * columnNumber).toFixed(3));
+    } else {
+        columnVolume = Number((0.3 * 0.3 * 3.0 * columnNumber).toFixed(3));
+    }
+
     // Add additional concrete volume based on total number of floors
     const storeyType = document.getElementById('storeys').value;
     const totalFloors = storeyType === 'G' ? 1 : storeyType === 'G+1' ? 2 : 3;
     const additionalConcreteVolume = 2 * totalFloors;  // 2 units per floor
     
     const concreteVolume = Number((slabVolume + columnVolume + additionalConcreteVolume).toFixed(3));
-    const mortarVolume = Number((perimeter * 3 * 0.13).toFixed(3));
+    let mortarVolume;
+    if(index == 0)
+    mortarVolume = Number((perimeter * 3 * 0.13 + 0.5 * floorArea).toFixed(3))
+    else
+    mortarVolume = Number((perimeter * 3 * 0.13 + 0.05 * floorArea).toFixed(3));
     const fineVolume = Number((0.75 * mortarVolume + (1.5/5.5) * concreteVolume).toFixed(3));
     const coarseVolume = Number((3.0/5.5 * concreteVolume).toFixed(3));
     const cementVolume = Number((1.0/5.5 * concreteVolume + 0.25 * mortarVolume).toFixed(3));
@@ -169,7 +178,7 @@ function calculateStoreyResults(index) {
     // Adjust brick calculations for each floor
     const brickArea = Number((0.19 * 0.009 * 0.009).toFixed(3));
     let bricks = Number((perimeter * 3 * 0.09) / 0.00154).toFixed(3);
-    bricks = Number((bricks * 0.6).toFixed(3));
+    bricks = Number((bricks * 0.8).toFixed(3));
     const brickPrice = Number((bricks * 8).toFixed(3));
     const mortarPrice = Number((3454 * mortarVolume).toFixed(3));
     const brickWorkTotal = Number(brickPrice.toFixed(3));
@@ -177,7 +186,7 @@ function calculateStoreyResults(index) {
     const sanitaryWork = Number((600 * floorArea).toFixed(3));
 
     // Calculate costs based on actual dimensions and floor level
-    const excavationCost = Number((180 * (0.9 * 1.2 * perimeter)).toFixed(3));
+    const excavationCost = Number((1700 * (0.9 * 1.2 * perimeter)).toFixed(3));
 
     // Adjust door count based on kitchen type
     const doorCount = roomCount + washroomCount + (isOpenKitchen ? 0 : 1);
@@ -185,13 +194,13 @@ function calculateStoreyResults(index) {
     const costs = {
         brickWork: brickWorkTotal,
         reinforcement: Math.ceil(68 * 0.015 * concreteVolume * 7850),
-        labour: Math.ceil(1800 * floorArea),
+        labour: Math.ceil(2150 * floorArea),
         shuttering: Math.ceil(295 * floorArea),
         excavation: excavationCost,
         fine: Math.ceil(fineVolume * 1800),
         coarse: Math.ceil(coarseVolume * 2200),
         cement: Math.ceil(cementBags * 350),
-        concrete: Math.ceil(fineVolume * 1100 + coarseVolume * 1800 + cementBags * 350),
+        concrete: Math.ceil(fineVolume * 1800 + coarseVolume * 2200 + cementBags * 350),
         sanitaryWork: sanitaryWork,
         electricalWork: electricalWork
     };
@@ -306,10 +315,12 @@ function createStoreyResultsSection(index) {
                 <h3>SHUTTERING</h3>
                 <p class="result-line">Shuttering Cost = <b>${storey.costs.shuttering}</b> Rs.</p>
 
+                ${index == 0 ? `
                 <h3>EXCAVATION</h3>
                 <p class="result-line">Excavation Cost = <b>${storey.costs.excavation}</b> Rs.</p>
+                `: ''}
 
-                ${index === 0 ? `
+                ${index == 0 ? `
                 <h3>DAMP PROOF</h3>
                 <p class="result-line">Damp Proof Cost = <b>${storey.costs.dampProofCost}</b> Rs.</p>
                 ` : ''}
