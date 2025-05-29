@@ -163,8 +163,13 @@ function calculateStoreyResults(index) {
     const storeyType = document.getElementById('storeys').value;
     const totalFloors = storeyType === 'G' ? 1 : storeyType === 'G+1' ? 2 : 3;
     const additionalConcreteVolume = 2 * totalFloors;  // 2 units per floor
-    
-    const concreteVolume = Number((slabVolume + columnVolume + additionalConcreteVolume).toFixed(3));
+    let concreteVolume = 0;
+    if(index == 0)
+    concreteVolume = Number((slabVolume + columnVolume + 2).toFixed(3));
+    else if(index == 1)
+    concreteVolume = Number((slabVolume + columnVolume + 4).toFixed(3));
+    else
+    concreteVolume = Number((slabVolume + columnVolume + 6).toFixed(3));
     let mortarVolume;
     if(index == 0)
     mortarVolume = Number((perimeter * 3 * 0.13 + 0.5 * floorArea).toFixed(3))
