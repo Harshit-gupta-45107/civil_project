@@ -326,7 +326,7 @@ function createStoreyResultsSection(index) {
                 ` : ''}
 
                 <h3>TOTAL</h3>
-                <p class="result-line">Total Floor Cost = <b>${storey.totalCost}</b> Rs.</p>
+                <p class="result-line">Total Floor Cost = <b>${storey.totalCost.toFixed(3)}</b> Rs.</p>
             </div>
         </div>
     `;
