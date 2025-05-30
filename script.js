@@ -212,7 +212,7 @@ function calculateStoreyResults(index) {
 
     // Add damp proof cost for ground floor only
     if (index === 0) {
-        costs.dampProofCost = Math.ceil(205 * 0.3 * 0.08 * perimeter);
+        costs.dampProofCost = Math.ceil(205 * 0.3 * perimeter);
     }
 
     return {
